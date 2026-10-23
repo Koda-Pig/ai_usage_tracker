@@ -1,10 +1,10 @@
 # AI Usage Tracker
 
-A menu bar-only macOS app that shows Claude and Codex usage: the 5-hour window over the weekly window, as percentages. Click it for reset times. There is no Dock icon, no window and no background helper.
+A menu bar-only macOS app that shows Claude and Codex allowance remaining: the 5-hour window over the weekly window, as percentages. Like a battery, 100% means full allowance and 0% means exhausted. Click it for reset times. There is no Dock icon, no window and no background helper.
 
 ```
-✳ 12%   >_ 0%
-  31%     59%
+✳ 88%   >_ 100%
+  69%      41%
 ```
 
 ## Where the numbers come from
@@ -18,7 +18,7 @@ It uses the same public OAuth client and PKCE flow as `claude auth login` (const
 
 **Codex.** On each refresh the app starts `codex app-server`, sends `account/rateLimits/read` over stdio, and quits it. That takes about 1.3 s and 0.25 s of CPU. Codex handles its own login, so the app never touches Codex's tokens. If the CLI is missing or offline, the app falls back to the newest `~/.codex/sessions` log, which holds the same numbers as of your last Codex request, and the menu says so.
 
-Once a window's reset time has passed, it shows 0% even if the last fetch was older.
+Once a window's reset time has passed, it shows 100% remaining even if the last fetch was older. Dropdown meters drain as allowance is consumed, turning orange at 30% remaining and red at 10%.
 
 ## Why it's cheap
 

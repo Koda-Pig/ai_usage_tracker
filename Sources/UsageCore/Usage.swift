@@ -16,6 +16,11 @@ public struct UsageWindow: Sendable, Equatable {
         if let resetsAt, resetsAt <= now { return 0 }
         return usedPercent
     }
+
+    /// Available allowance, like battery fullness: 100 is full and 0 is exhausted.
+    public func remainingPercent(at now: Date) -> Double {
+        100 - min(max(percent(at: now), 0), 100)
+    }
 }
 
 public struct ProviderUsage: Sendable, Equatable {

@@ -1,7 +1,7 @@
 import AppKit
 import UsageCore
 
-/// The menu bar glyph: per provider, a symbol followed by the 5-hour % stacked over the weekly %.
+/// The menu bar glyph: per provider, the remaining 5-hour % stacked over the remaining weekly %.
 /// A template image, so macOS tints it for light/dark/highlighted menu bars. Redrawn only when data changes.
 @MainActor
 enum StatusImage {
@@ -14,7 +14,7 @@ enum StatusImage {
     static func columns(claude: ProviderStatus, codex: ProviderStatus, now: Date = Date()) -> [Column] {
         func pct(_ w: UsageWindow?) -> String {
             guard let w else { return "–" }
-            return "\(Int(w.percent(at: now).rounded()))%"
+            return "\(Int(w.remainingPercent(at: now).rounded()))%"
         }
         return [
             Column(symbol: "asterisk", top: pct(claude.usage?.fiveHour), bottom: pct(claude.usage?.weekly)),

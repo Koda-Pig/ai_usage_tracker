@@ -25,7 +25,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.delegate = self
         menu.autoenablesItems = false
         statusItem.menu = menu
-        statusItem.button?.setAccessibilityLabel("AI usage")
+        statusItem.button?.setAccessibilityLabel("AI allowance remaining")
+        statusItem.button?.toolTip = "Allowance remaining · 5-hour above weekly"
         store.onChange = { [weak self] in self?.render() }
         render()
 
@@ -112,7 +113,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     private func windowRow(_ label: String, _ window: UsageWindow?, now: Date) -> NSMenuItem {
-        let percent = window.map { "\(Int($0.percent(at: now).rounded()))%" } ?? "–"
+        let percent = window.map { "\(Int($0.remainingPercent(at: now).rounded()))%" } ?? "–"
         let reset = window?.resetsAt.flatMap { Self.resetText($0, now: now) } ?? ""
 
         let style = NSMutableParagraphStyle()
@@ -123,7 +124,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         let row = NSMenuItem()
         row.attributedTitle = title
-        row.image = UsageBar.image(fraction: (window?.percent(at: now) ?? 0) / 100)
+        row.image = UsageBar.image(fraction: (window?.remainingPercent(at: now) ?? 0) / 100)
+        row.toolTip = "\(label) allowance remaining"
         return row   // no action: enabled so it reads at full contrast, but clicking does nothing
     }
 
@@ -209,7 +211,7 @@ enum UsageBar {
             NSColor.quaternaryLabelColor.setFill()
             NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
             if f > 0 {
-                let color: NSColor = f >= 0.9 ? .systemRed : f >= 0.7 ? .systemOrange : .systemGreen
+                let color: NSColor = f <= 0.1 ? .systemRed : f <= 0.3 ? .systemOrange : .systemGreen
                 color.setFill()
                 let fill = NSRect(x: 0, y: 0, width: max(rect.width * f, rect.height), height: rect.height)
                 NSBezierPath(roundedRect: fill, xRadius: radius, yRadius: radius).fill()

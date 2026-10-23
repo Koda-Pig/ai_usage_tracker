@@ -22,6 +22,8 @@ private func fixture(_ name: String) throws -> Data {
     let w = UsageWindow(usedPercent: 80, resetsAt: Date(timeIntervalSince1970: 100))
     #expect(w.percent(at: Date(timeIntervalSince1970: 99)) == 80)
     #expect(w.percent(at: Date(timeIntervalSince1970: 100)) == 0)
+    #expect(w.remainingPercent(at: Date(timeIntervalSince1970: 99)) == 20)
+    #expect(w.remainingPercent(at: Date(timeIntervalSince1970: 100)) == 100)
 }
 
 @Test func pkceChallengeIsS256OfVerifier() {
