@@ -211,7 +211,13 @@ enum UsageBar {
             NSColor.quaternaryLabelColor.setFill()
             NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
             if f > 0 {
-                let color: NSColor = f <= 0.1 ? .systemRed : f <= 0.3 ? .systemOrange : .systemGreen
+                // Blend through orange at 30% and reach red at 10% remaining.
+                let color: NSColor
+                if f > 0.3 {
+                    color = NSColor.systemOrange.blended(withFraction: (f - 0.3) / 0.7, of: .systemGreen) ?? .systemGreen
+                } else {
+                    color = NSColor.systemRed.blended(withFraction: max(0, (f - 0.1) / 0.2), of: .systemOrange) ?? .systemRed
+                }
                 color.setFill()
                 let fill = NSRect(x: 0, y: 0, width: max(rect.width * f, rect.height), height: rect.height)
                 NSBezierPath(roundedRect: fill, xRadius: radius, yRadius: radius).fill()

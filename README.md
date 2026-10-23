@@ -18,7 +18,7 @@ It uses the same public OAuth client and PKCE flow as `claude auth login` (const
 
 **Codex.** On each refresh the app starts `codex app-server`, sends `account/rateLimits/read` over stdio, and quits it. That takes about 1.3 s and 0.25 s of CPU. Codex handles its own login, so the app never touches Codex's tokens. If the CLI is missing or offline, the app falls back to the newest `~/.codex/sessions` log, which holds the same numbers as of your last Codex request, and the menu says so.
 
-Once a window's reset time has passed, it shows 100% remaining even if the last fetch was older. Dropdown meters drain as allowance is consumed, turning orange at 30% remaining and red at 10%.
+Once a window's reset time has passed, it shows 100% remaining even if the last fetch was older. Dropdown meters drain as allowance is consumed, with colors blending smoothly from green at 100%, through orange at 30%, to red at 10% and below.
 
 ## Why it's cheap
 
