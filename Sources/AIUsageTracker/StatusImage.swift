@@ -11,15 +11,17 @@ enum StatusImage {
         let bottom: String    // weekly
     }
 
+    /// Only the providers the user keeps in the menu bar get a column.
     static func columns(claude: ProviderStatus, codex: ProviderStatus, now: Date = Date()) -> [Column] {
         func pct(_ w: UsageWindow?) -> String {
             guard let w else { return "–" }
             return "\(Int(w.remainingPercent(at: now).rounded()))%"
         }
-        return [
-            Column(symbol: "asterisk", top: pct(claude.usage?.fiveHour), bottom: pct(claude.usage?.weekly)),
-            Column(symbol: "terminal", top: pct(codex.usage?.fiveHour), bottom: pct(codex.usage?.weekly)),
-        ]
+        return Settings.Provider.allCases.compactMap { provider in
+            guard Settings.showsInMenuBar(provider) else { return nil }
+            let status = provider == .claude ? claude : codex
+            return Column(symbol: provider.symbol, top: pct(status.usage?.fiveHour), bottom: pct(status.usage?.weekly))
+        }
     }
 
     private static let numberFont = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .semibold)
@@ -28,6 +30,10 @@ enum StatusImage {
     private static let columnGap: CGFloat = 7
 
     static func render(_ columns: [Column]) -> NSImage {
+        // With both providers hidden there is nothing to draw, and a zero-width status item
+        // can't be clicked — so keep a neutral mark that still opens the menu.
+        guard !columns.isEmpty else { return placeholder() }
+
         let height = NSStatusBar.system.thickness
         let attrs: [NSAttributedString.Key: Any] = [.font: numberFont, .foregroundColor: NSColor.black]
         let symbols = columns.map { NSImage(systemSymbolName: $0.symbol, accessibilityDescription: nil)?.withSymbolConfiguration(symbolConfig) }
@@ -52,6 +58,13 @@ enum StatusImage {
             }
             return true
         }
+        image.isTemplate = true
+        return image
+    }
+
+    private static func placeholder() -> NSImage {
+        let image = NSImage(systemSymbolName: "percent", accessibilityDescription: "AI allowance remaining")?
+            .withSymbolConfiguration(symbolConfig) ?? NSImage(size: NSSize(width: 12, height: 12))
         image.isTemplate = true
         return image
     }

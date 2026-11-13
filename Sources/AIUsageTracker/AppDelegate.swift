@@ -74,12 +74,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let now = Date()
         menu.removeAllItems()
 
-        section(menu, title: "Claude", status: store.claude, now: now)
+        section(menu, provider: .claude, status: store.claude, now: now)
         if !store.claudeSignedIn {
             menu.addItem(item("Sign in to Claude…", action: #selector(signIn)))
         }
         menu.addItem(.separator())
-        section(menu, title: "Codex", status: store.codex, now: now)
+        section(menu, provider: .codex, status: store.codex, now: now)
         menu.addItem(.separator())
 
         let refresh = item(store.isRefreshing ? "Refreshing…" : "Refresh", action: #selector(refreshNow), key: "r")
@@ -97,8 +97,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(item("Quit", action: #selector(quit), key: "q"))
     }
 
-    private func section(_ menu: NSMenu, title: String, status: ProviderStatus, now: Date) {
-        let header = NSMenuItem.sectionHeader(title: [title, status.usage?.plan].compactMap { $0 }.joined(separator: " · "))
+    private func section(_ menu: NSMenu, provider: Settings.Provider, status: ProviderStatus, now: Date) {
+        let header = NSMenuItem.sectionHeader(title: [provider.title, status.usage?.plan].compactMap { $0 }.joined(separator: " · "))
         menu.addItem(header)
         if let usage = status.usage {
             menu.addItem(windowRow("5-hour", usage.fiveHour, now: now))
@@ -110,6 +110,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if let error = status.error, error != .signedOut || status.usage != nil {
             menu.addItem(note(status.usage == nil ? error.description : "\(error.description) · showing last numbers"))
         }
+        menu.addItem(menuBarToggle(for: provider))
+    }
+
+    /// Lives in the provider's own section, so a provider hidden from the menu bar can still be brought back.
+    private func menuBarToggle(for provider: Settings.Provider) -> NSMenuItem {
+        let toggle = item("Show in Menu Bar", action: #selector(toggleMenuBarIcon))
+        toggle.state = Settings.showsInMenuBar(provider) ? .on : .off
+        toggle.representedObject = provider
+        return toggle
     }
 
     private func windowRow(_ label: String, _ window: UsageWindow?, now: Date) -> NSMenuItem {
@@ -163,6 +172,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Task { await store.signOutOfClaude() }
     }
 
+    @objc private func toggleMenuBarIcon(_ sender: NSMenuItem) {
+        guard let provider = sender.representedObject as? Settings.Provider else { return }
+        Settings.setShowsInMenuBar(!Settings.showsInMenuBar(provider), for: provider)
+        render()
+    }
+
     @objc private func toggleLogin() {
         let service = SMAppService.mainApp
         do {
@@ -184,7 +199,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         populate(menu)
         for item in menu.items {
             let text = item.isSeparatorItem ? "—" : (item.attributedTitle?.string ?? item.title).replacingOccurrences(of: "\t", with: "  ")
-            print(text + (item.subtitle.map { "  (\($0))" } ?? ""))
+            let check = item.state == .on ? "  ✓" : ""
+            print(text + check + (item.subtitle.map { "  (\($0))" } ?? ""))
         }
         let image = StatusImage.render(StatusImage.columns(claude: store.claude, codex: store.codex))
         let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(image.size.width * 4), pixelsHigh: Int(image.size.height * 4),

@@ -18,6 +18,8 @@ It uses the same public OAuth client and PKCE flow as `claude auth login` (const
 
 **Codex.** On each refresh the app starts `codex app-server`, sends `account/rateLimits/read` over stdio, and quits it. That takes about 1.3 s and 0.25 s of CPU. Codex handles its own login, so the app never touches Codex's tokens. If the CLI is missing or offline, the app falls back to the newest `~/.codex/sessions` log, which holds the same numbers as of your last Codex request, and the menu says so.
 
+Each provider's section in the dropdown has a *Show in Menu Bar* toggle. Turn it off and that provider drops out of the menu bar glyph, while its section — and the toggle — stay in the dropdown, so you can bring it back. The choice is remembered in `UserDefaults` per provider; with both hidden the menu bar keeps a plain `%` mark so the menu is still clickable.
+
 Once a window's reset time has passed, it shows 100% remaining even if the last fetch was older. Dropdown meters drain as allowance is consumed, with colors blending smoothly from green at 100%, through orange at 30%, to red at 10% and below.
 
 ## Why it's cheap
@@ -51,7 +53,7 @@ Sources/UsageCore/        all logic, unit tested
   LoopbackCallback.swift  one-shot 127.0.0.1 listener for the OAuth redirect
   CodexClient.swift       one-shot app-server query + session-log fallback
   Keychain.swift          the only place secrets are stored
-Sources/AIUsageTracker/   menu bar app (AppDelegate, StatusImage, UsageStore)
+Sources/AIUsageTracker/   menu bar app (AppDelegate, StatusImage, UsageStore, Settings)
 Tests/UsageCoreTests/     fixtures of observed responses + tests
 ```
 
